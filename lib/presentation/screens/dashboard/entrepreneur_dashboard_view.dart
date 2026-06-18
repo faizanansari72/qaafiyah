@@ -236,7 +236,52 @@ class _EntrepreneurDashboardViewState extends ConsumerState<EntrepreneurDashboar
             ),
             const SizedBox(height: 16),
 
-            // 2. Revenue Overview Metrics
+            // 2. Orders Pipeline Overview (Moved from bottom)
+            GlassCard(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'FULFILLMENT PIPELINE',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                      color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildPipelineIndicator("Pending", pendingOrders, AppTheme.darkPrimaryGold),
+                      _buildPipelineIndicator("Processing", processingOrders + packedOrders, Colors.orange),
+                      _buildPipelineIndicator("Shipped", shippedOrders, Colors.blue),
+                      _buildPipelineIndicator("Delivered", deliveredOrders, Colors.green),
+                      _buildPipelineIndicator("Returned/RTO", returnedOrders + rtoOrders, Colors.red),
+                    ],
+                  ),
+                  const Divider(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Total Orders in System',
+                        style: TextStyle(fontSize: 13, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
+                      ),
+                      Text(
+                        '$totalOrders Orders',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // 3. Revenue Overview Metrics
             Text(
               'REVENUE DIAGNOSTICS',
               style: TextStyle(
@@ -287,7 +332,7 @@ class _EntrepreneurDashboardViewState extends ConsumerState<EntrepreneurDashboar
             ),
             const SizedBox(height: 20),
 
-            // 3. Interactive Charts Section
+            // 4. Interactive Charts Section
             GlassCard(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -341,7 +386,7 @@ class _EntrepreneurDashboardViewState extends ConsumerState<EntrepreneurDashboar
             ),
             const SizedBox(height: 20),
 
-            // 4. Quick Actions
+            // 5. Quick Actions
             Text(
               'EXECUTIVE OPERATIONS CONSOLE',
               style: TextStyle(
@@ -374,51 +419,7 @@ class _EntrepreneurDashboardViewState extends ConsumerState<EntrepreneurDashboar
                 _buildActionTile(Icons.menu_book_rounded, Translations.translate('console_guide', ref.watch(languageProvider)), () => _showConsoleGuide(context, ref), isDark),
               ],
             ),
-            const SizedBox(height: 20),
-
-            // 5. Orders Pipeline Overview
-            GlassCard(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'FULFILLMENT PIPELINE',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
-                      color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildPipelineIndicator("Processing", processingOrders + packedOrders, Colors.orange),
-                      _buildPipelineIndicator("Shipped", shippedOrders, Colors.blue),
-                      _buildPipelineIndicator("Delivered", deliveredOrders, Colors.green),
-                      _buildPipelineIndicator("Returned/RTO", returnedOrders + rtoOrders, Colors.red),
-                    ],
-                  ),
-                  const Divider(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Total Orders in System',
-                        style: TextStyle(fontSize: 13, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
-                      ),
-                      Text(
-                        '$totalOrders Orders',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 30),
           ],
         ),
       ),
