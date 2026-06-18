@@ -1,0 +1,54 @@
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.buildDir = "../build"
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(":app")
+}
+
+subprojects { subproject ->
+    if (subproject.state.executed) {
+        configureNamespace(subproject)
+        configureCompileSdk(subproject)
+    } else {
+        subproject.afterEvaluate {
+            configureNamespace(subproject)
+            configureCompileSdk(subproject)
+        }
+    }
+}
+
+def configureNamespace(Project project) {
+    if (project.hasProperty("android")) {
+        try {
+            if (project.android.namespace == null || project.android.namespace.isEmpty()) {
+                project.android.namespace = project.group ?: "com.qaafiya.${project.name.replaceAll('-', '_')}"
+            }
+        } catch (Exception e) {
+            // Ignore potential evaluation exceptions
+        }
+    }
+}
+
+def configureCompileSdk(Project project) {
+    if (project.hasProperty("android")) {
+        try {
+            project.android {
+                compileSdkVersion 34
+            }
+        } catch (Exception e) {
+            // Ignore potential evaluation exceptions
+        }
+    }
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}
