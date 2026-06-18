@@ -569,10 +569,33 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                       // Delete
                       TextButton.icon(
                         onPressed: () {
-                          ref.read(ordersProvider.notifier).delete(order.id);
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Order successfully deleted from Isar.')),
+                          PremiumDialog.show(
+                            context: context,
+                            title: "Delete Order?",
+                            icon: Icons.delete_forever_rounded,
+                            iconColor: AppTheme.colorError,
+                            content: Text(
+                              "Are you sure you want to permanently delete order QF-${order.orderNumber} from the database?",
+                              style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : Colors.black87),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('CANCEL'),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.colorError),
+                                onPressed: () {
+                                  Navigator.pop(context); // Close dialog
+                                  Navigator.pop(context); // Close details sheet
+                                  ref.read(ordersProvider.notifier).delete(order.id);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Order successfully deleted.')),
+                                  );
+                                },
+                                child: const Text('DELETE', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                              ),
+                            ],
                           );
                         },
                         icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),

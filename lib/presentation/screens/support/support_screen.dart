@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/premium_dialog.dart';
 import '../../providers/providers.dart';
 import '../../../domain/models/domain_models.dart';
 
@@ -174,9 +175,32 @@ class _SupportScreenState extends ConsumerState<SupportScreen> with SingleTicker
                                   children: [
                                     TextButton(
                                       onPressed: () {
-                                        ref.read(supportTicketsProvider.notifier).delete(ticket.id);
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Ticket deleted successfully.')),
+                                        PremiumDialog.show(
+                                          context: context,
+                                          title: "Delete Support Ticket?",
+                                          icon: Icons.delete_forever_rounded,
+                                          iconColor: AppTheme.colorError,
+                                          content: Text(
+                                            "Are you sure you want to permanently delete support ticket '${ticket.title}'?",
+                                            style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : Colors.black87),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context),
+                                              child: const Text('CANCEL'),
+                                            ),
+                                            ElevatedButton(
+                                              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.colorError),
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                                ref.read(supportTicketsProvider.notifier).delete(ticket.id);
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(content: Text('Ticket deleted successfully.')),
+                                                );
+                                              },
+                                              child: const Text('DELETE', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                                            ),
+                                          ],
                                         );
                                       },
                                       child: const Text('DELETE', style: TextStyle(color: Colors.red, fontSize: 11, fontWeight: FontWeight.bold)),

@@ -55,7 +55,11 @@ An intelligent assistant equipped with a Local Retrieval-Augmented Generation (R
 
 ### 💎 4. Immersive Glassmorphism UI
 *   A premium, state-of-the-art dark & light gold/charcoal theme (`AppTheme`).
-*   Interactive frosted-glass panels (`GlassCard`) with custom glow shaders, hover states, and smooth spring-based micro-animations.
+*   Interactive frosted-glass panels (`GlassCard`) with custom glow shaders, hover states, and spring-based micro-animations.
+
+### 🛡 5. June 2026 Redesign & Data Safety Enhancements
+*   **Premium Blending Bottom Nav**: A full-width gradient transparent-blended navigation bar allowing screen contents to scroll dynamically behind it.
+*   **Data Action Confirmation System**: Added modal confirmation dialogs for key state changes (language switch, theme toggle, session logout) and all database record deletions (orders, products, warehouses, suppliers, feed updates, support tickets) to prevent accidental data loss.
 
 ---
 

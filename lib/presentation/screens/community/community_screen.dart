@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/premium_dialog.dart';
 import '../../providers/providers.dart';
 import '../../../domain/models/domain_models.dart';
 
@@ -209,9 +210,32 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                                     // Delete button for demo CRUD purposes
                                     IconButton(
                                       onPressed: () {
-                                        ref.read(communityPostsProvider.notifier).delete(post.id);
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Update removed from feed.')),
+                                        PremiumDialog.show(
+                                          context: context,
+                                          title: "Delete Feed Update?",
+                                          icon: Icons.delete_forever_rounded,
+                                          iconColor: AppTheme.colorError,
+                                          content: Text(
+                                            "Are you sure you want to permanently delete this update from your community feed?",
+                                            style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : Colors.black87),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context),
+                                              child: const Text('CANCEL'),
+                                            ),
+                                            ElevatedButton(
+                                              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.colorError),
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                                ref.read(communityPostsProvider.notifier).delete(post.id);
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(content: Text('Update removed from feed.')),
+                                                );
+                                              },
+                                              child: const Text('DELETE', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                                            ),
+                                          ],
                                         );
                                       },
                                       icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Colors.red),

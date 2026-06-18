@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/premium_dialog.dart';
 import '../../providers/providers.dart';
 import '../../../domain/models/domain_models.dart';
 
@@ -183,9 +184,32 @@ class _WarehousesScreenState extends ConsumerState<WarehousesScreen> {
                                   children: [
                                     TextButton.icon(
                                       onPressed: () {
-                                        ref.read(warehousesProvider.notifier).delete(w.id);
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Warehouse successfully deleted.')),
+                                        PremiumDialog.show(
+                                          context: context,
+                                          title: "Delete Warehouse?",
+                                          icon: Icons.delete_forever_rounded,
+                                          iconColor: AppTheme.colorError,
+                                          content: Text(
+                                            "Are you sure you want to permanently delete the warehouse '${w.name}' (${w.location})?",
+                                            style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : Colors.black87),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context),
+                                              child: const Text('CANCEL'),
+                                            ),
+                                            ElevatedButton(
+                                              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.colorError),
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                                ref.read(warehousesProvider.notifier).delete(w.id);
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(content: Text('Warehouse successfully deleted.')),
+                                                );
+                                              },
+                                              child: const Text('DELETE', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                                            ),
+                                          ],
                                         );
                                       },
                                       icon: const Icon(Icons.delete_outline_rounded, color: Colors.red, size: 16),
