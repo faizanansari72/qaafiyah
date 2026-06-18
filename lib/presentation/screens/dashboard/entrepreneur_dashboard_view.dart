@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/localization/translations.dart';
 import '../../../core/widgets/premium_dialog.dart';
+import '../../../domain/models/domain_models.dart';
 import '../../providers/providers.dart';
 
 class EntrepreneurDashboardView extends ConsumerStatefulWidget {
@@ -1400,7 +1401,7 @@ class _EntrepreneurDashboardViewState extends ConsumerState<EntrepreneurDashboar
                     children: [5.0, 12.0, 18.0, 28.0].map((rate) {
                       final selected = gstRate == rate;
                       return ChoiceChip(
-                        label: Text('$rate% GST', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: selected ? Colors.black : (isDark ? Colors.white70 : Colors.black85))),
+                        label: Text('$rate% GST', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: selected ? Colors.black : (isDark ? Colors.white70 : Colors.black87))),
                         selected: selected,
                         selectedColor: AppTheme.darkPrimaryGold,
                         backgroundColor: isDark ? Colors.black38 : Colors.grey[200],
@@ -1456,7 +1457,7 @@ class _EntrepreneurDashboardViewState extends ConsumerState<EntrepreneurDashboar
           style: TextStyle(
             fontSize: isHighlight ? 12 : 11,
             fontWeight: isHighlight ? FontWeight.bold : FontWeight.normal,
-            color: isDark ? Colors.white70 : Colors.black85,
+            color: isDark ? Colors.white70 : Colors.black87,
           ),
         ),
         Text(
@@ -1470,5 +1471,4 @@ class _EntrepreneurDashboardViewState extends ConsumerState<EntrepreneurDashboar
       ],
     );
   }
-}
 }
