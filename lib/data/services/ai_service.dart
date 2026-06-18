@@ -3,7 +3,10 @@ import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AiService {
-  static const String defaultGeminiKey = 'AQ.Ab8RN6JnQtO2d2R1R_Ssb3BhiQgRp_ubTuJqYFoq2QWborVaMg';
+  static const String defaultGeminiKey = String.fromEnvironment(
+    'GEMINI_API_KEY',
+    defaultValue: 'YOUR_GEMINI_API_KEY_HERE',
+  );
 
   Future<String> getCompletion({
     required String prompt,
@@ -18,8 +21,17 @@ class AiService {
       apiKey = defaultGeminiKey;
     }
 
-    if (provider == 'local' || apiKey.trim().isEmpty) {
-      return localContext;
+    if (apiKey == 'YOUR_GEMINI_API_KEY_HERE' || apiKey.trim().isEmpty) {
+      if (provider == 'local') {
+        return localContext;
+      } else {
+        final engineName = provider == 'grok'
+            ? 'Grok (xAI)'
+            : (provider == 'gemini' ? 'Gemini (Google)' : 'ChatGPT (OpenAI)');
+        return "⚠️ **$engineName API Key Missing:**\n"
+            "Please configure your API key in the settings gear icon next to 'Qaafiya AI' at the top of the Advisor tab.\n\n"
+            "**Falling back to local diagnostics:**\n\n$localContext";
+      }
     }
 
     try {

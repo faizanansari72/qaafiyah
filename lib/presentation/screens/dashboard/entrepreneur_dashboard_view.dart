@@ -161,7 +161,11 @@ class _EntrepreneurDashboardViewState extends ConsumerState<EntrepreneurDashboar
         await prefs.setString('ai_provider', 'gemini');
       }
       final currentKey = prefs.getString('ai_api_key');
-      if (currentKey == null || currentKey.isEmpty || currentKey.startsWith('xai-') || currentKey == 'AQ.Ab8RN6LwnVlrFq-RGVc6qZvLF-VoS5C4b7l_D9CoAeuEs5RwhQ') {
+      if (currentKey == null ||
+          currentKey.isEmpty ||
+          currentKey.startsWith('xai-') ||
+          currentKey == 'AQ.Ab8RN6LwnVlrFq-RGVc6qZvLF-VoS5C4b7l_D9CoAeuEs5RwhQ' ||
+          currentKey == 'AQ.Ab8RN6JnQtO2d2R1R_Ssb3BhiQgRp_ubTuJqYFoq2QWborVaMg') {
         await prefs.setString('ai_api_key', AiService.defaultGeminiKey);
       }
     } catch (e) {
