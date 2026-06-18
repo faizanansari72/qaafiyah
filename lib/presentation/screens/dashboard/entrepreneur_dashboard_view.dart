@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
@@ -19,8 +22,105 @@ class EntrepreneurDashboardView extends ConsumerStatefulWidget {
 
 class _EntrepreneurDashboardViewState extends ConsumerState<EntrepreneurDashboardView> {
   int _activeChartIndex = 0; // 0: Revenue, 1: Profit, 2: Orders
+  late DateTime _currentTime;
+  Timer? _clockTimer;
+  String _currentLocation = 'Gurugram, HR';
 
   final formatter = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
+
+  @override
+  void initState() {
+    super.initState();
+    _currentTime = DateTime.now();
+    _clockTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          _currentTime = DateTime.now();
+        });
+      }
+    });
+    _initLocation();
+  }
+
+  @override
+  void dispose() {
+    _clockTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _initLocation() async {
+    try {
+      bool serviceEnabled;
+      LocationPermission permission;
+
+      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        setState(() {
+          _currentLocation = 'Gurugram, HR';
+        });
+        return;
+      }
+
+      permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          setState(() {
+            _currentLocation = 'Gurugram, HR';
+          });
+          return;
+        }
+      }
+      
+      if (permission == LocationPermission.deniedForever) {
+        setState(() {
+          _currentLocation = 'Gurugram, HR';
+        });
+        return;
+      }
+
+      final Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.low,
+        timeLimit: const Duration(seconds: 5),
+      );
+
+      final List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        final Placemark place = placemarks.first;
+        final city = place.locality ?? place.subAdministrativeArea ?? place.administrativeArea ?? 'Gurugram';
+        final state = place.administrativeArea ?? 'HR';
+        
+        String stateCode = state;
+        if (state.toLowerCase().contains('haryana')) {
+          stateCode = 'HR';
+        } else if (state.toLowerCase().contains('delhi')) {
+          stateCode = 'DL';
+        } else if (state.toLowerCase().contains('maharashtra')) {
+          stateCode = 'MH';
+        } else if (state.toLowerCase().contains('karnataka')) {
+          stateCode = 'KA';
+        } else if (state.toLowerCase().contains('rajasthan')) {
+          stateCode = 'RJ';
+        } else if (state.toLowerCase().contains('uttar pradesh')) {
+          stateCode = 'UP';
+        } else if (stateCode.length > 15) {
+          stateCode = stateCode.substring(0, 3).toUpperCase();
+        }
+
+        setState(() {
+          _currentLocation = '$city, $stateCode';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _currentLocation = 'Gurugram, HR';
+      });
+    }
+  }
 
   String _getInitials(String name) {
     if (name.isEmpty) return "Q";
@@ -1057,10 +1157,9 @@ class _EntrepreneurDashboardViewState extends ConsumerState<EntrepreneurDashboar
   }
 
   Widget _buildDailyBriefingWidget(BuildContext context, dynamic activeEntre, bool isDark) {
-    final now = DateTime.now();
-    final dayName = DateFormat('EEEE').format(now);
-    final dateStr = DateFormat('MMMM dd, yyyy').format(now);
-    final timeStr = DateFormat('hh:mm a').format(now);
+    final dayName = DateFormat('EEEE').format(_currentTime);
+    final dateStr = DateFormat('MMMM dd, yyyy').format(_currentTime);
+    final timeStr = DateFormat('hh:mm:ss a').format(_currentTime);
 
     final isAarav = activeEntre.id == 'E1000';
     final isRiya = activeEntre.id == 'E1009';
@@ -1118,7 +1217,7 @@ class _EntrepreneurDashboardViewState extends ConsumerState<EntrepreneurDashboar
                     const Icon(Icons.location_on_rounded, size: 10, color: AppTheme.colorError),
                     const SizedBox(width: 4),
                     Text(
-                      'Gurugram, HR',
+                      _currentLocation,
                       style: TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.bold,

@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Qaafiya needs location access to show weather and local briefing on your dashboard.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Qaafiya needs location access to show weather and local briefing on your dashboard.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
