@@ -45,14 +45,14 @@ class _AiScreenState extends ConsumerState<AiScreen> {
   Future<void> _initDefaultApiSettings() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      if (prefs.getString('ai_provider') == null) {
-        await prefs.setString('ai_provider', 'grok');
+      if (prefs.getString('ai_provider') == null || prefs.getString('ai_provider') == 'grok') {
+        await prefs.setString('ai_provider', 'gemini');
       }
-      if (prefs.getString('ai_api_key') == null || prefs.getString('ai_api_key')!.isEmpty) {
-        await prefs.setString('ai_api_key', '');
+      if (prefs.getString('ai_api_key') == null || prefs.getString('ai_api_key')!.isEmpty || prefs.getString('ai_api_key')!.startsWith('xai-')) {
+        await prefs.setString('ai_api_key', 'AQ.Ab8RN6LwnVlrFq-RGVc6qZvLF-VoS5C4b7l_D9CoAeuEs5RwhQ');
       }
     } catch (e) {
-      print("Error setting default Grok API settings: $e");
+      print("Error setting default Gemini API settings: $e");
     }
   }
 

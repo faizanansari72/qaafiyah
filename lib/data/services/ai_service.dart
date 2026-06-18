@@ -3,19 +3,19 @@ import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AiService {
-  static const String defaultGrokKey = '';
+  static const String defaultGeminiKey = 'AQ.Ab8RN6LwnVlrFq-RGVc6qZvLF-VoS5C4b7l_D9CoAeuEs5RwhQ';
 
   Future<String> getCompletion({
     required String prompt,
     required String localContext,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    final provider = prefs.getString('ai_provider') ?? 'grok';
+    final provider = prefs.getString('ai_provider') ?? 'gemini';
     String apiKey = prefs.getString('ai_api_key') ?? '';
 
-    // Fall back to default Grok key if empty and Grok is selected
-    if (apiKey.isEmpty && provider == 'grok') {
-      apiKey = defaultGrokKey;
+    // Fall back to default Gemini key if empty and Gemini is selected
+    if (apiKey.isEmpty && provider == 'gemini') {
+      apiKey = defaultGeminiKey;
     }
 
     if (provider == 'local' || apiKey.trim().isEmpty) {
