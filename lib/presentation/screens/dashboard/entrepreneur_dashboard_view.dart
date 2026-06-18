@@ -30,6 +30,46 @@ class _EntrepreneurDashboardViewState extends ConsumerState<EntrepreneurDashboar
     return parts[0][0].toUpperCase();
   }
 
+  List<Map<String, dynamic>> _generateDynamicChartData(List<Order> orders) {
+    final now = DateTime.now();
+    final List<Map<String, dynamic>> chartData = [];
+    
+    for (int i = 5; i >= 0; i--) {
+      final monthDate = DateTime(now.year, now.month - i, 1);
+      final monthName = DateFormat('MMM').format(monthDate);
+      final year = monthDate.year;
+      final month = monthDate.month;
+      
+      final monthOrders = orders.where((o) {
+        try {
+          final dt = DateTime.parse(o.createdAt);
+          return dt.year == year && dt.month == month;
+        } catch (_) {
+          return false;
+        }
+      }).toList();
+      
+      int revenue = 0;
+      int ordersCount = monthOrders.length;
+      int netProfit = 0;
+      
+      for (final o in monthOrders) {
+        revenue += o.totalAmount;
+        if (o.status != 'Returned' && o.status != 'RTO') {
+          netProfit += (o.totalAmount * 0.45).round();
+        }
+      }
+      
+      chartData.add({
+        'month': monthName,
+        'revenue': revenue,
+        'netProfit': netProfit,
+        'ordersCount': ordersCount,
+      });
+    }
+    return chartData;
+  }
+
   @override
   Widget build(BuildContext context) {
     final activeEntre = ref.watch(currentEntrepreneurProvider);
@@ -235,6 +275,8 @@ class _EntrepreneurDashboardViewState extends ConsumerState<EntrepreneurDashboar
               ),
             ),
             const SizedBox(height: 16),
+            _buildDailyBriefingWidget(context, activeEntre, isDark),
+            const SizedBox(height: 16),
 
             // 2. Orders Pipeline Overview (Moved from bottom)
             GlassCard(
@@ -282,14 +324,37 @@ class _EntrepreneurDashboardViewState extends ConsumerState<EntrepreneurDashboar
             const SizedBox(height: 20),
 
             // 3. Revenue Overview Metrics
-            Text(
-              'REVENUE DIAGNOSTICS',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2,
-                color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'REVENUE DIAGNOSTICS',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2,
+                    color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => _showPricingCalculator(context),
+                  icon: const Icon(Icons.calculate_rounded, size: 14, color: AppTheme.darkPrimaryGold),
+                  label: const Text(
+                    'PRICING CALC',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.darkPrimaryGold,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 10),
             GridView.count(
@@ -363,22 +428,10 @@ class _EntrepreneurDashboardViewState extends ConsumerState<EntrepreneurDashboar
                     ],
                   ),
                   const SizedBox(height: 16),
-                  analyticsAsync.when(
-                    data: (data) {
-                      return SizedBox(
-                        height: 180,
-                        child: LineChart(
-                          _getLineChartData(data, _activeChartIndex, isDark),
-                        ),
-                      );
-                    },
-                    loading: () => const SizedBox(
-                      height: 180,
-                      child: Center(child: CircularProgressIndicator(color: AppTheme.darkPrimaryGold)),
-                    ),
-                    error: (e, s) => SizedBox(
-                      height: 180,
-                      child: Center(child: Text("Error loading chart data: $e")),
+                  SizedBox(
+                    height: 180,
+                    child: LineChart(
+                      _getLineChartData(_generateDynamicChartData(entreOrders), _activeChartIndex, isDark),
                     ),
                   ),
                 ],
@@ -1001,4 +1054,421 @@ class _EntrepreneurDashboardViewState extends ConsumerState<EntrepreneurDashboar
       },
     );
   }
+
+  Widget _buildDailyBriefingWidget(BuildContext context, dynamic activeEntre, bool isDark) {
+    final now = DateTime.now();
+    final dayName = DateFormat('EEEE').format(now);
+    final dateStr = DateFormat('MMMM dd, yyyy').format(now);
+    final timeStr = DateFormat('hh:mm a').format(now);
+
+    final isAarav = activeEntre.id == 'E1000';
+    final isRiya = activeEntre.id == 'E1009';
+
+    String bdayTitle = 'Upcoming: Riya Sen\'s Birthday (Rank #1 Founder)';
+    String bdayDesc = 'Jaipur Loom founder celebration. Prepare greetings!';
+    String eventTitle = 'Today: Performance Diagnostics Alignment';
+    String eventDesc = 'Reviewing fulfillment rates and gross profit margins on console dashboard.';
+
+    if (isAarav) {
+      bdayTitle = 'Happy Birthday Aarav! 🎉 🎂';
+      bdayDesc = 'Founder of Kora Couture turns a year older today (Rank #16). Enjoy your special day!';
+      eventTitle = 'Tomorrow: Supplier Contract Review';
+      eventDesc = '11:00 AM • Discussion on premium silk procurement margins with Varanasi suppliers.';
+    } else if (isRiya) {
+      bdayTitle = 'Birthday Milestone: Riya Sen (Rank #1) 🎉';
+      bdayDesc = 'Tomorrow is Riya\'s birthday! Prepare team cards and target review metrics.';
+      eventTitle = 'Today: Dispatch Audit Hub Alignment';
+      eventDesc = '10:00 AM • Reviewing packaging bottleneck and BlueDart delivery cycles.';
+    }
+
+    return GlassCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.wb_sunny_rounded, color: Colors.orangeAccent, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'DAILY EXECUTIVE BRIEFING',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                      color: isDark ? AppTheme.darkPrimaryGold : AppTheme.lightPrimaryGold,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.black26 : Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder, width: 0.5),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.location_on_rounded, size: 10, color: AppTheme.colorError),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Gurugram, HR',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    dayName,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '$dateStr  •  $timeStr',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                    ),
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  const Text(
+                    '32°C',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.darkPrimaryGold,
+                    ),
+                  ),
+                  Text(
+                    'Sunny & Warm',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const Divider(height: 24, thickness: 0.5),
+          Text(
+            'TODAY\'S AGENDA & MILESTONES',
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+              color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('🎉', style: TextStyle(fontSize: 14)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      bdayTitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      bdayDesc,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('📅', style: TextStyle(fontSize: 14)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      eventTitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      eventDesc,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPricingCalculator(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    double costPrice = 500;
+    double targetMargin = 40; 
+    double shippingCost = 80;
+    double gstRate = 18; 
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            double landedCost = costPrice + shippingCost;
+            double basePrice = landedCost / (1 - (targetMargin / 100));
+            if (targetMargin >= 100) basePrice = landedCost * 5; 
+            
+            double gstAmount = basePrice * (gstRate / 100);
+            double finalPrice = basePrice + gstAmount;
+            double estimatedProfit = basePrice - landedCost;
+
+            return SingleChildScrollView(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 30,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[800] : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: AppTheme.darkPrimaryGold, size: 24),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'GST, MARGIN & PRICING CALCULATOR',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Simulate premium product pricing tiers, GST compliance slabs, and final customer invoice totals dynamically.',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                    ),
+                  ),
+                  const Divider(height: 24),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Cost Price (Manufacturing/Sourcing)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      Text(formatter.format(costPrice.round()), style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.darkPrimaryGold, fontSize: 14)),
+                    ],
+                  ),
+                  Slider(
+                    value: costPrice,
+                    min: 50,
+                    max: 5000,
+                    divisions: 99,
+                    activeColor: AppTheme.darkPrimaryGold,
+                    inactiveColor: isDark ? Colors.grey[800] : Colors.grey[300],
+                    onChanged: (val) {
+                      setState(() {
+                        costPrice = val;
+                      });
+                    },
+                  ),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Target Profit Margin (on Base Price)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      Text('${targetMargin.round()}%', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.colorSuccess, fontSize: 14)),
+                    ],
+                  ),
+                  Slider(
+                    value: targetMargin,
+                    min: 10,
+                    max: 85,
+                    divisions: 15,
+                    activeColor: AppTheme.colorSuccess,
+                    inactiveColor: isDark ? Colors.grey[800] : Colors.grey[300],
+                    onChanged: (val) {
+                      setState(() {
+                        targetMargin = val;
+                      });
+                    },
+                  ),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Logistics & Shipping Cost', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      Text(formatter.format(shippingCost.round()), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue, fontSize: 14)),
+                    ],
+                  ),
+                  Slider(
+                    value: shippingCost,
+                    min: 20,
+                    max: 500,
+                    divisions: 48,
+                    activeColor: Colors.blue,
+                    inactiveColor: isDark ? Colors.grey[800] : Colors.grey[300],
+                    onChanged: (val) {
+                      setState(() {
+                        shippingCost = val;
+                      });
+                    },
+                  ),
+
+                  const Text('GST Compliance Slab Rate', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [5.0, 12.0, 18.0, 28.0].map((rate) {
+                      final selected = gstRate == rate;
+                      return ChoiceChip(
+                        label: Text('$rate% GST', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: selected ? Colors.black : (isDark ? Colors.white70 : Colors.black85))),
+                        selected: selected,
+                        selectedColor: AppTheme.darkPrimaryGold,
+                        backgroundColor: isDark ? Colors.black38 : Colors.grey[200],
+                        onSelected: (val) {
+                          if (val) {
+                            setState(() {
+                              gstRate = rate;
+                            });
+                          }
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const Divider(height: 32),
+
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.black26 : Colors.grey[100],
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppTheme.darkPrimaryGold.withOpacity(0.3)),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildCalcRow('Landed Cost (Product + Shipping)', formatter.format(landedCost.round()), isDark),
+                        const SizedBox(height: 6),
+                        _buildCalcRow('Suggested Base Selling Price', formatter.format(basePrice.round()), isDark),
+                        const SizedBox(height: 6),
+                        _buildCalcRow('GST Tax Value (${gstRate.round()}%)', formatter.format(gstAmount.round()), isDark),
+                        const Divider(height: 16),
+                        _buildCalcRow('FINAL CUSTOMER PRICE (Inclusive)', formatter.format(finalPrice.round()), isDark, isHighlight: true, color: AppTheme.darkPrimaryGold),
+                        const SizedBox(height: 6),
+                        _buildCalcRow('Estimated Net Margin (Profit)', formatter.format(estimatedProfit.round()), isDark, isHighlight: true, color: AppTheme.colorSuccess),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildCalcRow(String label, String value, bool isDark, {bool isHighlight = false, Color? color}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: isHighlight ? 12 : 11,
+            fontWeight: isHighlight ? FontWeight.bold : FontWeight.normal,
+            color: isDark ? Colors.white70 : Colors.black85,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: isHighlight ? 13 : 11.5,
+            fontWeight: FontWeight.bold,
+            color: color ?? (isDark ? Colors.white : Colors.black),
+          ),
+        ),
+      ],
+    );
+  }
+}
 }

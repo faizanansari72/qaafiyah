@@ -261,6 +261,12 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
   }
 
   void _showOrderDetailsSheet(BuildContext context, Order order, bool isDark) {
+    final total = order.totalAmount;
+    final subtotal = (total / 1.18).round();
+    final totalGst = total - subtotal;
+    final cgst = (totalGst / 2).round();
+    final sgst = totalGst - cgst;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -329,6 +335,8 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                     itemCount: order.items.length,
                     itemBuilder: (c, idx) {
                       final item = order.items[idx];
+                      final basePrice = (item.price / 1.18).round();
+                      final baseLineTotal = basePrice * item.quantity;
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 6.0),
                         child: Row(
@@ -358,14 +366,14 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   Text(
-                                    '${formatter.format(item.price)} × ${item.quantity}',
+                                    '${formatter.format(basePrice)} × ${item.quantity}',
                                     style: TextStyle(fontSize: 11, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
                                   ),
                                 ],
                               ),
                             ),
                             Text(
-                              formatter.format(item.price * item.quantity),
+                              formatter.format(baseLineTotal),
                               style: const TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ],
@@ -406,7 +414,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                               style: TextStyle(fontSize: 12, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
                             ),
                             Text(
-                              formatter.format((order.totalAmount / 1.18).round()),
+                              formatter.format(subtotal),
                               style: TextStyle(fontSize: 12, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
                             ),
                           ],
@@ -416,11 +424,25 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              Translations.translate('tax_gst', ref.watch(languageProvider)),
+                              Translations.translate('cgst', ref.watch(languageProvider)),
                               style: TextStyle(fontSize: 12, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
                             ),
                             Text(
-                              formatter.format((order.totalAmount - (order.totalAmount / 1.18)).round()),
+                              formatter.format(cgst),
+                              style: TextStyle(fontSize: 12, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              Translations.translate('sgst', ref.watch(languageProvider)),
+                              style: TextStyle(fontSize: 12, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
+                            ),
+                            Text(
+                              formatter.format(sgst),
                               style: TextStyle(fontSize: 12, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
                             ),
                           ],
@@ -434,7 +456,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                             ),
                             Text(
-                              formatter.format(order.totalAmount),
+                              formatter.format(total),
                               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.darkPrimaryGold),
                             ),
                           ],
@@ -876,6 +898,11 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
   void _simulateInvoiceDownload(BuildContext context, Order order, WidgetRef ref) {
     final lang = ref.read(languageProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final total = order.totalAmount;
+    final subtotal = (total / 1.18).round();
+    final totalGst = total - subtotal;
+    final cgst = (totalGst / 2).round();
+    final sgst = totalGst - cgst;
     
     PremiumDialog.show(
       context: context,
@@ -911,29 +938,40 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
             Text('Customer: ${order.customerName}', style: const TextStyle(fontSize: 10)),
             Text('Fulfillment Center: WH-DELHI-01', style: const TextStyle(fontSize: 10)),
             const Divider(height: 16),
-            ...order.items.map((it) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(child: Text('${it.productName} x${it.quantity}', style: const TextStyle(fontSize: 10), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                  Text(formatter.format(it.price * it.quantity), style: const TextStyle(fontSize: 10)),
-                ],
-              ),
-            )).toList(),
+            ...order.items.map((it) {
+              final basePrice = (it.price / 1.18).round();
+              final baseTotal = basePrice * it.quantity;
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(child: Text('${it.productName} x${it.quantity}', style: const TextStyle(fontSize: 10), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                    Text(formatter.format(baseTotal), style: const TextStyle(fontSize: 10)),
+                  ],
+                ),
+              );
+            }).toList(),
             const Divider(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                const Text('Subtotal (Taxable Value)', style: TextStyle(fontSize: 10)),
+                Text(formatter.format(subtotal), style: const TextStyle(fontSize: 10)),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
                 const Text('CGST (9%)', style: TextStyle(fontSize: 10)),
-                Text(formatter.format(((order.totalAmount - (order.totalAmount / 1.18)) / 2).round()), style: const TextStyle(fontSize: 10)),
+                Text(formatter.format(cgst), style: const TextStyle(fontSize: 10)),
               ],
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('SGST (9%)', style: TextStyle(fontSize: 10)),
-                Text(formatter.format(((order.totalAmount - (order.totalAmount / 1.18)) / 2).round()), style: const TextStyle(fontSize: 10)),
+                Text(formatter.format(sgst), style: const TextStyle(fontSize: 10)),
               ],
             ),
             const Divider(height: 8),

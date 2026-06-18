@@ -149,6 +149,14 @@ class Translations {
       AppLanguage.english: 'GST Tax (18%)',
       AppLanguage.hindi: 'जीएसटी टैक्स (18%)',
     },
+    'cgst': {
+      AppLanguage.english: 'CGST (9%)',
+      AppLanguage.hindi: 'सीजीएसटी (9%)',
+    },
+    'sgst': {
+      AppLanguage.english: 'SGST (9%)',
+      AppLanguage.hindi: 'एसजीएसटी (9%)',
+    },
     'grand_total': {
       AppLanguage.english: 'Grand Total',
       AppLanguage.hindi: 'कुल देय राशि',

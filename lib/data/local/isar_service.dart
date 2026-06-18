@@ -347,54 +347,91 @@ class IsarService {
       final now = DateTime.now();
       final List<OrderEntity> newOrders = [];
 
+      // Clear existing orders to avoid duplicate overlays and mixed states
+      await isar.writeTxn(() async {
+        await isar.orderEntitys.clear();
+      });
+
       int orderCounter = 1000;
       for (final entre in entrepreneurs) {
-        // We will generate 6 orders for each entrepreneur
-        // 2 today (Pending/Processing)
-        // 2 this week (Packed/Shipped)
-        // 2 earlier this month (Delivered)
+        final rand = Random(entre.uid.hashCode);
         
-        final List<Map<String, dynamic>> orderDates = [
-          {'date': now.subtract(const Duration(hours: 3)), 'status': 'Pending', 'payment': 'COD', 'payStatus': 'Pending'},
-          {'date': now.subtract(const Duration(hours: 8)), 'status': 'Processing', 'payment': 'Pre-paid', 'payStatus': 'Paid'},
-          {'date': now.subtract(const Duration(days: 2)), 'status': 'Packed', 'payment': 'COD', 'payStatus': 'Pending'},
-          {'date': now.subtract(const Duration(days: 4)), 'status': 'Shipped', 'payment': 'COD', 'payStatus': 'Pending'},
-          {'date': now.subtract(const Duration(days: 10)), 'status': 'Delivered', 'payment': 'COD', 'payStatus': 'Settled'},
-          {'date': now.subtract(const Duration(days: 20)), 'status': 'Delivered', 'payment': 'Pre-paid', 'payStatus': 'Paid'},
-        ];
+        // Scale order count based on entrepreneur's rank
+        // Rank 1 gets ~90-100 orders, Rank 30 gets ~20-25 orders for rich analytics
+        final rank = entre.rank > 0 ? entre.rank : 15;
+        final orderCount = max(20, 100 - (rank * 2.5).round());
 
-        for (int i = 0; i < orderDates.length; i++) {
-          final config = orderDates[i];
-          final oDate = config['date'] as DateTime;
-          final oStatus = config['status'] as String;
-          final oPay = config['payment'] as String;
-          final oPayStat = config['payStatus'] as String;
-
-          // Pick 1 or 2 products
-          final prod1 = products[i % products.length];
-          final prod2 = products[(i + 1) % products.length];
-
-          final items = [
-            {
-              'productId': prod1.uid,
-              'productName': prod1.name,
-              'quantity': 1,
-              'price': prod1.sellingPrice,
-            },
-            if (i % 2 == 0)
-              {
-                'productId': prod2.uid,
-                'productName': prod2.name,
-                'quantity': 2,
-                'price': prod2.sellingPrice,
-              }
-          ];
-
-          int total = 0;
-          for (final it in items) {
-            total += (it['price'] as int) * (it['quantity'] as int);
+        for (int i = 0; i < orderCount; i++) {
+          // Date distribution
+          DateTime oDate;
+          if (i < 5) {
+            // Today (last 24 hours)
+            oDate = now.subtract(Duration(hours: rand.nextInt(24), minutes: rand.nextInt(60)));
+          } else if (i < 20) {
+            // Last 7 days
+            oDate = now.subtract(Duration(days: 1 + rand.nextInt(6), hours: rand.nextInt(24)));
+          } else if (i < 50) {
+            // Last 30 days
+            oDate = now.subtract(Duration(days: 7 + rand.nextInt(23), hours: rand.nextInt(24)));
+          } else {
+            // Last 180 days (6 months) for chart trend distribution
+            oDate = now.subtract(Duration(days: 30 + rand.nextInt(150), hours: rand.nextInt(24)));
           }
 
+          // Random status
+          String oStatus = 'Delivered';
+          if (i < 2) {
+            // Ensure some pending/processing for pipeline diagnostics
+            oStatus = i == 0 ? 'Pending' : 'Processing';
+          } else {
+            final statusRoll = rand.nextDouble();
+            if (statusRoll < 0.08) {
+              oStatus = 'Pending';
+            } else if (statusRoll < 0.20) {
+              oStatus = 'Processing';
+            } else if (statusRoll < 0.32) {
+              oStatus = 'Packed';
+            } else if (statusRoll < 0.48) {
+              oStatus = 'Shipped';
+            } else if (statusRoll < 0.85) {
+              oStatus = 'Delivered';
+            } else if (statusRoll < 0.93) {
+              oStatus = 'Returned';
+            } else {
+              oStatus = 'RTO';
+            }
+          }
+
+          // Payment
+          final String oPay = rand.nextDouble() > 0.45 ? 'COD' : 'Pre-paid';
+          String oPayStat = 'Paid';
+          if (oPay == 'COD') {
+            if (oStatus == 'Delivered') {
+              oPayStat = rand.nextDouble() > 0.3 ? 'Settled' : 'Collected';
+            } else if (oStatus == 'Returned' || oStatus == 'RTO') {
+              oPayStat = 'Cancelled';
+            } else {
+              oPayStat = 'Pending';
+            }
+          }
+
+          // Pick 1 to 3 random products
+          final itemsCount = 1 + rand.nextInt(2);
+          final items = <Map<String, dynamic>>[];
+          int total = 0;
+          for (int j = 0; j < itemsCount; j++) {
+            final prod = products[rand.nextInt(products.length)];
+            final qty = 1 + rand.nextInt(2);
+            items.add({
+              'productId': prod.uid,
+              'productName': prod.name,
+              'quantity': qty,
+              'price': prod.sellingPrice,
+            });
+            total += prod.sellingPrice * qty;
+          }
+
+          // Build timeline
           final timeline = [
             {
               'status': 'Pending',
@@ -462,7 +499,7 @@ class IsarService {
       await isar.writeTxn(() async {
         await isar.orderEntitys.putAll(newOrders);
       });
-      print("Generated ${newOrders.length} fresh recent orders for all entrepreneur profiles!");
+      print("Generated ${newOrders.length} scaled orders for all entrepreneur profiles!");
     } catch (e) {
       print("Error generating fresh mock orders: $e");
     }
