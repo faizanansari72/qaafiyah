@@ -99,9 +99,9 @@ class AiService {
 
     String explanation = "An unknown error occurred.";
     if (statusCode == 401) {
-      explanation = "Invalid or unauthorized API key. xAI/Grok requires a valid developer API key. Please check your credentials in the AI Settings.";
+      explanation = "Invalid or unauthorized API key. $engineName requires a valid developer API key. Please check your credentials in the settings gear icon next to 'Qaafiya AI' at the top of the Advisor tab.";
     } else if (statusCode == 402) {
-      explanation = "Payment required / No credits remaining. xAI/Grok requires you to load paid billing credits on console.x.ai before making API requests.";
+      explanation = "Payment required / No credits remaining. $engineName requires active billing or query quota credits.";
     } else if (statusCode == 429) {
       explanation = "Rate limit exceeded. Please wait a moment before sending another message.";
     } else if (statusCode == 404) {
