@@ -60,6 +60,7 @@ An intelligent assistant equipped with a Local Retrieval-Augmented Generation (R
 ### 🛡 5. June 2026 Redesign & Data Safety Enhancements
 *   **Premium Blending Bottom Nav**: A full-width gradient transparent-blended navigation bar allowing screen contents to scroll dynamically behind it.
 *   **Data Action Confirmation System**: Added modal confirmation dialogs for key state changes (language switch, theme toggle, session logout) and all database record deletions (orders, products, warehouses, suppliers, feed updates, support tickets) to prevent accidental data loss.
+*   **AI Service Integration Update**: Configured native integration with Google AI Studio Gemini API using the latest free tier API keys, with automatic configuration cleanup to override previously revoked API keys.
 
 ---
 

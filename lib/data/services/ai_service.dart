@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AiService {
-  static const String defaultGeminiKey = 'AQ.Ab8RN6LwnVlrFq-RGVc6qZvLF-VoS5C4b7l_D9CoAeuEs5RwhQ';
+  static const String defaultGeminiKey = 'AQ.Ab8RN6JnQtO2d2R1R_Ssb3BhiQgRp_ubTuJqYFoq2QWborVaMg';
 
   Future<String> getCompletion({
     required String prompt,

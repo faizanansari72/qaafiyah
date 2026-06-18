@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../providers/providers.dart';
+import '../../../data/services/ai_service.dart';
 
 class ChatMessage {
   final String text;
@@ -48,8 +49,9 @@ class _AiScreenState extends ConsumerState<AiScreen> {
       if (prefs.getString('ai_provider') == null || prefs.getString('ai_provider') == 'grok') {
         await prefs.setString('ai_provider', 'gemini');
       }
-      if (prefs.getString('ai_api_key') == null || prefs.getString('ai_api_key')!.isEmpty || prefs.getString('ai_api_key')!.startsWith('xai-')) {
-        await prefs.setString('ai_api_key', 'AQ.Ab8RN6LwnVlrFq-RGVc6qZvLF-VoS5C4b7l_D9CoAeuEs5RwhQ');
+      final currentKey = prefs.getString('ai_api_key');
+      if (currentKey == null || currentKey.isEmpty || currentKey.startsWith('xai-') || currentKey == 'AQ.Ab8RN6LwnVlrFq-RGVc6qZvLF-VoS5C4b7l_D9CoAeuEs5RwhQ') {
+        await prefs.setString('ai_api_key', AiService.defaultGeminiKey);
       }
     } catch (e) {
       print("Error setting default Gemini API settings: $e");

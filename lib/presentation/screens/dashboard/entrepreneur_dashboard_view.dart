@@ -13,6 +13,7 @@ import '../../../core/localization/translations.dart';
 import '../../../core/widgets/premium_dialog.dart';
 import '../../../domain/models/domain_models.dart';
 import '../../providers/providers.dart';
+import '../../../data/services/ai_service.dart';
 
 // Chat message structure for advisor tab
 class ChatMessage {
@@ -159,8 +160,9 @@ class _EntrepreneurDashboardViewState extends ConsumerState<EntrepreneurDashboar
       if (prefs.getString('ai_provider') == null || prefs.getString('ai_provider') == 'grok') {
         await prefs.setString('ai_provider', 'gemini');
       }
-      if (prefs.getString('ai_api_key') == null || prefs.getString('ai_api_key')!.isEmpty || prefs.getString('ai_api_key')!.startsWith('xai-')) {
-        await prefs.setString('ai_api_key', 'AQ.Ab8RN6LwnVlrFq-RGVc6qZvLF-VoS5C4b7l_D9CoAeuEs5RwhQ');
+      final currentKey = prefs.getString('ai_api_key');
+      if (currentKey == null || currentKey.isEmpty || currentKey.startsWith('xai-') || currentKey == 'AQ.Ab8RN6LwnVlrFq-RGVc6qZvLF-VoS5C4b7l_D9CoAeuEs5RwhQ') {
+        await prefs.setString('ai_api_key', AiService.defaultGeminiKey);
       }
     } catch (e) {
       print("Error setting default Gemini API settings: $e");
