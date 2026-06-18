@@ -26,7 +26,7 @@ class AiService {
       final client = HttpClient();
 
       if (provider == 'gemini') {
-        final url = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey');
+        final url = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey');
         final request = await client.postUrl(url).timeout(const Duration(seconds: 8));
         request.headers.contentType = ContentType.json;
 
